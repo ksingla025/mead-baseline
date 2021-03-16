@@ -1941,30 +1941,6 @@ class FineTuneModel(nn.Module):
         return self.output_layer(stacked)
 
 
-class CompositePooling(nn.Module):
-    """Composite pooling allows for multiple sub-modules during pooling to be used in parallel
-    """
-
-    def __init__(self, models):
-        """
-        Note, this currently requires that each submodel is an eight_mile model with an `output_dim` attr
-        """
-        super().__init__()
-        self.models = nn.ModuleList(models)
-        self.output_dim = sum(m.output_dim for m in self.models)
-        self.requires_length = any(getattr(m, "requires_length", False) for m in self.models)
-
-    def forward(self, inputs):
-        inputs, lengths = tensor_and_lengths(inputs)
-        pooled = []
-        for sub_model in self.models:
-            if getattr(sub_model, "requires_length", False):
-                pooled.append(sub_model((inputs, lengths)))
-            else:
-                pooled.append(sub_model(inputs))
-        return torch.cat(pooled, -1)
-
-
 class EmbedPoolStackModel(nn.Module):
     """This provides an idiom for classification consisting of multiple phases
 

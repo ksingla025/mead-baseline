@@ -472,26 +472,3 @@ class FineTunePairedClassifierModel(FineTuneModelClassifier):
 
         return example_dict
 
-
-@register_model(task='classify', name='composite')
-class CompositePoolingModel(ClassifierModelBase):
-    """Fulfills pooling contract by aggregating pooling from a set of sub-models and concatenates each"""
-
-    def init_pool(self, dsz, **kwargs):
-        SubModels = [eval(model) for model in kwargs.get('sub')]
-        sub_models = [SM.init_pool(self, dsz, **kwargs) for SM in SubModels]
-        return CompositePooling(sub_models)
-
-    def make_input(self, batch_dict):
-        """Because the sub-model could contain an LSTM, make sure to sort lengths descending
-
-        :param batch_dict:
-        :return:
-        """
-        inputs = super().make_input(batch_dict)
-        lengths = inputs['lengths']
-        lengths, perm_idx = lengths.sort(0, descending=True)
-        for k, value in inputs.items():
-            inputs[k] = value[perm_idx]
-        return inputs
-
