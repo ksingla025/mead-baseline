@@ -21,20 +21,8 @@ def autograph_options(options):
         tf.config.optimizer.set_experimental_options(old_opts)
 
 
-def set_tf_eager_mode(prefer_eager: bool = False):
-    tf_version = get_version(tf)
-    if prefer_eager and tf_version < 2:
-        LOGGER.info('user requesting eager on 1.x')
-        tf.compat.v1.enable_eager_execution()
-    elif not prefer_eager and tf_version >= 2:
-        LOGGER.info('User requesting eager disabled on 2.x')
-        tf.compat.v1.disable_eager_execution()
-
-
 def set_tf_eager_debug(debug: bool = False):
-    if tf.executing_eagerly():
-        if debug:
-            tf.config.experimental_run_functions_eagerly(debug)
+    tf.config.experimental_run_functions_eagerly(debug)
 
 
 def patch_dist_strategy(strategy):

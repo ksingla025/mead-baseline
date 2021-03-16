@@ -8,7 +8,7 @@ import numpy as np
 tf = pytest.importorskip("tensorflow")
 from baseline.model import create_tagger_model, load_tagger_model
 from baseline.embeddings import load_embeddings
-from baseline.utils import transition_mask as np_transition_mask
+from eight_mile.utils import transition_mask as np_transition_mask
 from baseline.tf.tfy import transition_mask
 
 
@@ -83,21 +83,3 @@ def test_mask_is_transpose(label_vocab, model):
     np_mask = np_transition_mask(label_vocab, SPAN_TYPE, label_vocab[S], label_vocab[E], label_vocab[P])
     np.testing.assert_allclose(transition.T, np_mask)
 
-
-def test_persists_save(model, save_file):
-    model.save_using(tf.compat.v1.train.Saver())
-    t1 = model.sess.run(model.A)
-    model.save(save_file)
-    m2 = load_tagger_model(save_file)
-    t2 = model.sess.run(m2.A)
-    np.testing.assert_allclose(t1, t2)
-
-
-def test_skip_mask(label_vocab, embeds, mask):
-    from baseline.tf import tagger
-
-    model = create_tagger_model(embeds, label_vocab, crf=True, hsz=HSZ, cfiltsz=[3], wsz=WSZ, layers=2, rnntype="blstm")
-    model.create_loss()
-    model.sess.run(tf.compat.v1.global_variables_initializer())
-    transition = model.sess.run(model.A)
-    assert transition[label_vocab["O"], label_vocab[S]] != -1e4

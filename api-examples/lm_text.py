@@ -7,14 +7,9 @@ parser.add_argument('--model', help='A classifier model', required=True, type=st
 parser.add_argument('--text', help='raw value', type=str)
 parser.add_argument('--device', help='device')
 parser.add_argument('--backend', help='backend', choices={'tf', 'pytorch'}, default='tf')
-parser.add_argument('--prefer_eager', help="If running in TensorFlow, should we prefer eager model", type=str2bool)
 
 
 args = parser.parse_known_args()[0]
-
-if args.backend == 'tf':
-    from eight_mile.tf.layers import set_tf_eager_mode
-    set_tf_eager_mode(args.prefer_eager)
 
 if os.path.exists(args.text) and os.path.isfile(args.text):
     texts = []

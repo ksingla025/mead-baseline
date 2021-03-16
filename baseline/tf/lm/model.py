@@ -33,10 +33,7 @@ class LanguageModelBase(tf.keras.Model, LanguageModel):
         :param basename: Base name of model
         :return:
         """
-        if not tf.executing_eagerly():
-            self.saver.save(self.sess, basename, write_meta_graph=False)
-        else:
-            self.save_weights(f"{basename}.wgt")
+        self.save_weights(f"{basename}.wgt")
 
     def save_md(self, basename):
         """This method saves out a `.state` file containing meta-data from these classes and any info
@@ -118,22 +115,12 @@ class LanguageModelBase(tf.keras.Model, LanguageModel):
         :param train: (`bool`) Are we training (or evaluating)?
         :return: A `feed_dict`
         """
-        if not tf.executing_eagerly():
-            batch_dict_for_model = new_placeholder_dict(train)
 
-            for key in self.src_keys:
-                batch_dict_for_model["{}:0".format(key)] = batch_dict[key]
+        SET_TRAIN_FLAG(train)
 
-            y = batch_dict.get('y')
-            if y is not None:
-                batch_dict_for_model[self.y] = batch_dict['y']
-
-        else:
-            SET_TRAIN_FLAG(train)
-
-            batch_dict_for_model = {}
-            for key in self.src_keys:
-                batch_dict_for_model[key] = batch_dict[key]
+        batch_dict_for_model = {}
+        for key in self.src_keys:
+            batch_dict_for_model[key] = batch_dict[key]
 
         return batch_dict_for_model
 
@@ -144,12 +131,7 @@ class LanguageModelBase(tf.keras.Model, LanguageModel):
         :return: The softmax output for this step
         """
         batch_dict = self.make_input(batch_dict)
-        if not tf.executing_eagerly():
-            step_softmax = self.sess.run(self.probs, batch_dict)
-        else:
-            # FIXME: This is not really the proper handling for eager mode
-            # We want to be able to pass in the last hidden state and emit the current one right?
-            step_softmax = tf.nn.softmax(self(batch_dict, None)[0])
+        step_softmax = tf.nn.softmax(self(batch_dict, None)[0])
 
         return step_softmax
 
@@ -181,25 +163,7 @@ class LanguageModelBase(tf.keras.Model, LanguageModel):
         lm._unserializable.append(lm.tgt_key)
         lm._record_state(embeddings, **kwargs)
         inputs = {}
-
-        if not tf.executing_eagerly():
-
-            for k, embedding in embeddings.items():
-                x = kwargs.get(k, embedding.create_placeholder(name=k))
-                inputs[k] = x
-
-            lm.y = kwargs.get('y', tf.compat.v1.placeholder(tf.int32, [None, None], name="y"))
-            lm.sess = kwargs.get('sess', tf.compat.v1.Session())
         lm.create_layers(embeddings, **kwargs)
-
-        if not tf.executing_eagerly():
-            if lm.requires_state:
-                lm.zero_state(inputs)
-                lm.logits, lm.final_state = lm(inputs, lm.initial_state)
-            else:
-                lm.logits, _ = lm(inputs, None)
-            lm.probs = tf.nn.softmax(lm.logits, name="softmax")
-
         return lm
 
     def call(self, inputs: Dict[str, TensorDef], hidden: TensorDef) -> Tuple[TensorDef, TensorDef]:
@@ -236,43 +200,20 @@ class LanguageModelBase(tf.keras.Model, LanguageModel):
         :return: A restored model
         """
         _state = read_json(basename + '.state')
+        _state = read_json(basename + '.state')
+        _state['model_type'] = kwargs.get('model_type', 'default')
+        embeddings = {}
+        embeddings_dict = _state.pop("embeddings")
 
-        if not tf.executing_eagerly():
-            _state['sess'] = kwargs.pop('sess', create_session())
-            embeddings_info = _state.pop("embeddings")
+        for key, class_name in embeddings_dict.items():
+            md = read_json('{}-{}-md.json'.format(basename, key))
+            embed_args = dict({'vsz': md['vsz'], 'dsz': md['dsz']})
+            Constructor = eval(class_name)
+            embeddings[key] = Constructor(key, **embed_args)
 
-            with _state['sess'].graph.as_default():
-                embeddings = reload_embeddings(embeddings_info, basename)
-                for k in embeddings_info:
-                    if k in kwargs:
-                        _state[k] = kwargs[k]
-
-                _state['model_type'] = kwargs.get('model_type', 'default')
-                model = cls.create(embeddings, **_state)
-                model._state = _state
-
-                do_init = kwargs.get('init', True)
-                if do_init:
-                    init = tf.compat.v1.global_variables_initializer()
-                    model.sess.run(init)
-
-                model.saver = tf.compat.v1.train.Saver()
-                model.saver.restore(model.sess, basename)
-        else:
-            _state = read_json(basename + '.state')
-            _state['model_type'] = kwargs.get('model_type', 'default')
-            embeddings = {}
-            embeddings_dict = _state.pop("embeddings")
-
-            for key, class_name in embeddings_dict.items():
-                md = read_json('{}-{}-md.json'.format(basename, key))
-                embed_args = dict({'vsz': md['vsz'], 'dsz': md['dsz']})
-                Constructor = eval(class_name)
-                embeddings[key] = Constructor(key, **embed_args)
-
-            model = cls.create(embeddings, **_state)
-            model._state = _state
-            model.load_weights(f"{basename}.wgt")
+        model = cls.create(embeddings, **_state)
+        model._state = _state
+        model.load_weights(f"{basename}.wgt")
 
         return model
 

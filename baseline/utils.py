@@ -229,28 +229,6 @@ def topk(k, probs):
 
 
 @export
-def beam_multinomial(k, probs):
-    """Prune all elements in a large probability distribution below the top K.
-
-    Renormalize the distribution with only top K, and then sample n times out of that.
-    """
-
-    tops = topk(k, probs)
-    i = 0
-    n = len(tops.keys())
-    ary = np.zeros((n))
-    idx = []
-    for abs_idx, v in tops.items():
-        ary[i] = v
-        idx.append(abs_idx)
-        i += 1
-
-    ary /= np.sum(ary)
-    sample_idx = np.argmax(np.random.multinomial(1, ary))
-    return idx[sample_idx]
-
-
-@export
 def unzip_model(path):
     path = unzip_files(path)
     return os.path.join(path, [x[:-6] for x in os.listdir(path) if 'index' in x][0])

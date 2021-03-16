@@ -1,8 +1,9 @@
 import logging
 import numpy as np
-from baseline.utils import (
-    exporter, optional_params, listify, register, import_user_module, read_json
+from eight_mile.utils import (
+    exporter, optional_params, listify, register, read_json
 )
+from baseline.utils import import_user_module
 
 __all__ = []
 export = exporter(__all__)

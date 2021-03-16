@@ -7,6 +7,7 @@ import pytest
 import numpy as np
 from eight_mile.embeddings import *
 from eight_mile.utils import Offsets
+from eight_mile.embeddings import PretrainedEmbeddingsModel, RandomInitVecModel, write_word2vec_file, norm_weights
 
 loc = os.path.dirname(os.path.realpath(__file__))
 GLOVE_FILE = os.path.join(loc, "test_data", "glove_test.txt")

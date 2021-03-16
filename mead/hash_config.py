@@ -1,5 +1,5 @@
 import argparse
-from baseline.utils import read_config_stream
+from eight_mile.utils import read_config_stream
 from mead.utils import hash_config, convert_path
 
 

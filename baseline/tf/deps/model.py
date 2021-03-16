@@ -8,12 +8,16 @@ from baseline.tf.embeddings import *
 from eight_mile.tf.layers import *
 from baseline.version import __version__
 
-from baseline.utils import (
+from eight_mile.utils import (
     fill_y,
     listify,
     ls_props,
     read_json,
     write_json,
+)
+
+from baseline.utils import (
+
     MAGIC_VARS,
     MEAD_HUB_MODULES
 )

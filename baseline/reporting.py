@@ -163,54 +163,6 @@ class TensorBoardReporting(ReportingHook):
             self.log_scalar(name, metrics[metric], tick)
 
 
-@register_reporting(name='visdom')
-class VisdomReporting(ReportingHook):
-    """
-    To use this:
-    - python -m visdom.server
-    - http://localhost:8097/
-    """
-    def __init__(self, **kwargs):
-        super(VisdomReporting, self).__init__(**kwargs)
-        import visdom
-        name = kwargs.get('name', 'main')
-        logger.info('Creating g_vis instance with env {}'.format(name))
-        self._vis = visdom.Visdom(env=name, use_incoming_socket=False)
-        self._vis_win = {}
-
-    def step(self, metrics, tick, phase, tick_type=None, **kwargs):
-        """This method will write its results to visdom
-
-        :param metrics: A map of metrics to scores
-        :param tick: The time (resolution defined by `tick_type`)
-        :param phase: The phase of training (`Train`, `Valid`, `Test`)
-        :param tick_type: The resolution of tick (`STEP`, `EPOCH`)
-        :return:
-        """
-        tick_type = ReportingHook._infer_tick_type(phase, tick_type)
-        for metric in metrics.keys():
-            chart_id = '({} - {}) {}'.format(phase, tick_type, metric)
-            if chart_id not in self._vis_win:
-                logger.info('Creating visualization for %s' % chart_id)
-                self._vis_win[chart_id] = self._vis.line(
-                    X=np.array([0]),
-                    Y=np.array([metrics[metric]]),
-                    opts=dict(
-                        fillarea=True,
-                        xlabel='Time',
-                        ylabel='Metric',
-                        title=chart_id,
-                    ),
-                )
-            else:
-                self._vis.line(
-                    X=np.array([tick]),
-                    Y=np.array([metrics[metric]]),
-                    win=self._vis_win[chart_id],
-                    update='append'
-                )
-
-
 @export
 def create_reporting(reporting_hooks, hook_settings, proc_info):
     reporting = [LoggingReporting()]

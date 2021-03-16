@@ -9,8 +9,9 @@ from collections import Counter
 import numpy as np
 import baseline.data
 from baseline.vectorizers import Dict1DVectorizer, Token1DVectorizer, create_vectorizer, HasPredefinedVocab
-from baseline.utils import import_user_module, revlut, exporter, optional_params, Offsets, listify, SingleFileDownloader
-from eight_mile.progress import create_progress_bar
+from eight_mile.utils import exporter, optional_params, Offsets, listify
+from eight_mile.downloads import SingleFileDownloader
+
 __all__ = []
 export = exporter(__all__)
 

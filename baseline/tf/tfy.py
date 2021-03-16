@@ -90,9 +90,3 @@ def reload_embeddings_from_state(embeddings_dict, basename):
         Constructor = getattr(mod, class_name)
         embeddings[key] = Constructor(key, **embed_args)
     return embeddings
-
-
-def dense_layer(output_layer_depth):
-    output_layer = tf.layers.Dense(output_layer_depth, use_bias=False, dtype=tf.float32, name="dense")
-    return output_layer
-
