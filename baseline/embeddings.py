@@ -43,7 +43,6 @@ def create_embeddings(**kwargs):
 
 
 MEAD_LAYERS_EMBEDDINGS_REDUCTION = {}
-MEAD_LAYERS_EMBEDDINGS_REDUCTION_LOADERS = {}
 
 
 @export
@@ -53,17 +52,14 @@ def register_embeddings_reduction(cls, name=None):
     if name is None:
         name = cls.__name__
 
-    if name in MEAD_LAYERS_EMBEDDINGS:
+    if name in MEAD_LAYERS_EMBEDDINGS_REDUCTION:
         raise Exception(
             "Error: attempt to re-define previously registered handler {} (old: {}, new: {}) in registry".format(
-                name, MEAD_LAYERS_EMBEDDINGS[name], cls
+                name, MEAD_LAYERS_EMBEDDINGS_REDUCTION[name], cls
             )
         )
 
-    MEAD_LAYERS_EMBEDDINGS[name] = cls
-
-    if hasattr(cls, "load"):
-        MEAD_LAYERS_EMBEDDINGS_LOADERS[name] = cls.load
+    MEAD_LAYERS_EMBEDDINGS_REDUCTION[name] = cls
     return cls
 
 
@@ -71,7 +67,7 @@ def register_embeddings_reduction(cls, name=None):
 def create_embeddings_reduction(**kwargs):
     embed_type = kwargs.get("embed_reduction_type", "concat")
 
-    Constructor = MEAD_LAYERS_EMBEDDINGS.get(embed_type)
+    Constructor = MEAD_LAYERS_EMBEDDINGS_REDUCTION.get(embed_type)
     if Constructor:
         return Constructor(**kwargs)
     return embed_type
