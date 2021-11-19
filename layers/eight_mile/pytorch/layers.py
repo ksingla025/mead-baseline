@@ -4620,6 +4620,25 @@ class WeightedMultiHeadNLLLoss(nn.Module):
         weights = weights.type_as(loss)
         return torch.dot(loss, weights)/len(weights)
 
+class WeightedSigmoidBCELoss(nn.Module):
+
+    def __init__(self):
+
+        super().__init__()
+        self.loss = nn.BCELoss(reduction='none')
+
+    def forward(self, preds, targets, weights, mask):
+
+        loss = self.loss(preds[0], targets)
+        loss = loss*mask
+        weights = weights.type_as(loss)
+
+        loss = torch.sum(loss,1)
+        loss = torch.mean(loss*weights)
+ 
+        return loss
+
+
 class WeightedSequenceLoss(nn.Module):
     """Weight individual training examples
 

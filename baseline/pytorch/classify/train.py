@@ -22,6 +22,11 @@ def _add_to_cm(cm, y, pred):
     yp = best.cpu().int()
     cm.add_batch(yt.data.numpy(), yp.data.numpy())
 
+def _add_to_cm_mcml(cm, y, pred):
+
+#    print(cm, y, pred)
+
+    cm.add_batch(y, pred)
 
 @register_trainer(task='classify', name='default')
 class ClassifyTrainerPyTorch(EpochReportingTrainer):
@@ -44,7 +49,7 @@ class ClassifyTrainerPyTorch(EpochReportingTrainer):
         self.optimizer = OptimizerManager(model, **kwargs)
         self.model = model
         if self.gpus > 0 and self.model.gpu:
-            self.crit = model.create_loss().cuda()
+            self.crit = model.create_loss_bce().cuda()
             if self.gpus > 1:
                 self.model = torch.nn.DataParallel(model).cuda()
             else:
