@@ -4620,6 +4620,26 @@ class WeightedMultiHeadNLLLoss(nn.Module):
         weights = weights.type_as(loss)
         return torch.dot(loss, weights)/len(weights)
 
+class WeightedWordNLLLoss(nn.Module):
+    """
+    Weighted word-level loss for tagging using masking
+    """
+    def __init__(self):
+        super().__init__()
+        self.loss = nn.NLLLoss(reduction='none')
+
+    def forward(self, preds, targets, weights, mask):
+        
+        loss = 0.0
+        for i in range(0,len(targets)):
+
+            sloss = self.loss(preds[i],targets[i])
+            sloss = torch.sum(sloss*mask[i])
+            loss = loss + sloss
+
+        loss = loss / len(targets)
+        return loss
+
 class WeightedSigmoidBCELoss(nn.Module):
 
     def __init__(self):
@@ -4629,7 +4649,7 @@ class WeightedSigmoidBCELoss(nn.Module):
 
     def forward(self, preds, targets, weights, mask):
 
-        loss = self.loss(preds[0], targets)
+        loss = self.loss(preds, targets)
         loss = loss*mask
         weights = weights.type_as(loss)
 
